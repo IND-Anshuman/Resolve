@@ -1,0 +1,70 @@
+services:
+  - type: web
+    name: resolve
+    runtime: node
+    plan: starter
+    buildCommand: npm ci && npm run db:migrate && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: '22'
+      # Neon connection string: lib/db uses Neon's HTTP driver, which only talks to Neon.
+      - key: DATABASE_URL
+        sync: false
+      - key: APP_URL
+        sync: false
+      - key: CRON_SECRET
+        generateValue: true
+      - key: CONSOLE_ACCESS_TOKEN
+        generateValue: true
+      - key: PAYPAL_ENV
+        value: sandbox
+      - key: PAYPAL_CLIENT_ID
+        sync: false
+      - key: PAYPAL_SECRET
+        sync: false
+      - key: PAYPAL_WEBHOOK_ID
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: OPENAI_MODEL
+        value: gpt-4o
+      - key: OPENAI_BASE_URL
+        sync: false
+      - key: OPENAI_VISION
+        sync: false
+      - key: APPROVAL_EXPIRY_HOURS
+        value: '48'
+      - key: ZAPIER_WEBHOOK_URL
+        sync: false
+      - key: ELASTIC_URL
+        sync: false
+      - key: ELASTIC_API_KEY
+        sync: false
+      - key: ELASTIC_INDEX
+        value: resolve
+
+  - type: cron
+    name: resolve-maintenance
+    runtime: node
+    plan: starter
+    schedule: '*/15 * * * *'
+    buildCommand: npm ci
+    startCommand: >-
+      curl --fail --silent --show-error --retry 3
+      --header "Authorization: Bearer $CRON_SECRET"
+      "$APP_URL/api/cron/recheck"
+    envVars:
+      # Read from the web service so the two can never drift apart.
+      - key: APP_URL
+        fromService:
+          type: web
+          name: resolve
+          envVarKey: APP_URL
+      - key: CRON_SECRET
+        fromService:
+          type: web
+          name: resolve
+          envVarKey: CRON_SECRET
+
