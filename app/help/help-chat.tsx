@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { withBase } from '@/lib/base-path';
 import type { ChatState } from '@/lib/cases/service';
 import { saveLastOrder, useLastOrder, type LastOrder } from '@/lib/last-order';
 import { formatUsd } from '@/lib/money';
@@ -25,7 +26,7 @@ async function shrinkImage(file: File, maxSide = 1280): Promise<string> {
 }
 
 async function post(body: unknown) {
-  const res = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  const res = await fetch(withBase('/api/chat'), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
   const data = await res.json();
   if (!res.ok) throw new Error(data.error ?? 'Something went wrong.');
   return data;
@@ -183,7 +184,7 @@ export function HelpChat({ demo }: { demo: LastOrder | null }) {
           <Bubble key={m.id} role={m.role}>
             {(m.preview || m.hasImage) && (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={m.preview ?? `/api/attachment?id=${m.id}`} alt="Photo you attached" className="mb-2 max-h-48 rounded-md" />
+              <img src={m.preview ?? withBase(`/api/attachment?id=${m.id}`)} alt="Photo you attached" className="mb-2 max-h-48 rounded-md" />
             )}
             {m.body.split('\n\n').map((para, i) => (
               <p key={i} className={i ? 'mt-2' : ''}>

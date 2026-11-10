@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { withBase } from '@/lib/base-path';
 import type { CaseListRow, Results } from '@/lib/cases/queries';
 import { ApprovalsPanel } from './approvals-panel';
 import { CaseDrawer } from './case-drawer';
@@ -18,7 +19,7 @@ type Tab = 'cases' | 'approvals' | 'results' | 'timeline' | 'settings';
 const POLL_MS = 4000;
 
 export async function api<T>(url: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(url, init);
+  const res = await fetch(withBase(url), init);
   const data = await res.json();
   if (!res.ok) throw new Error(data.error ?? data.reason ?? 'Request failed');
   return data as T;

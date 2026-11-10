@@ -3,6 +3,7 @@
 import type { ColDef } from 'ag-grid-community';
 import { AgGridReact } from 'ag-grid-react';
 import { useEffect, useState } from 'react';
+import { withBase } from '@/lib/base-path';
 import type { CaseDetail, CaseListRow } from '@/lib/cases/queries';
 import { formatUsd } from '@/lib/money';
 import { api } from './console';
@@ -138,7 +139,7 @@ export function CaseDrawer({ caseId, row, onClose }: { caseId: string; row?: Cas
                     <p className="text-xs text-muted">{m.role === 'agent' ? 'Resolve' : m.role === 'seller' ? 'You' : 'Buyer'}</p>
                     {m.hasImage && (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={`/api/attachment?id=${m.id}`} alt="Photo from the buyer" className="my-1 max-h-56 rounded-md border border-line" />
+                      <img src={withBase(`/api/attachment?id=${m.id}`)} alt="Photo from the buyer" className="my-1 max-h-56 rounded-md border border-line" />
                     )}
                     <p className="whitespace-pre-line">{m.body}</p>
                   </div>

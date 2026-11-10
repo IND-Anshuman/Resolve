@@ -1,3 +1,5 @@
+import { BASE_PATH } from '@/lib/base-path';
+
 const COOKIE = 'resolve_console_session';
 
 export function consoleAuthConfigured() {
@@ -23,5 +25,5 @@ export function unauthorizedConsoleResponse() {
 
 export function sessionCookie(token: string, maxAge = 60 * 60 * 12) {
   const secure = process.env.NODE_ENV === 'production' ? '; Secure' : '';
-  return `${COOKIE}=${encodeURIComponent(token)}; Path=/; Max-Age=${maxAge}; HttpOnly; SameSite=Lax${secure}`;
+  return `${COOKIE}=${encodeURIComponent(token)}; Path=${BASE_PATH || '/'}; Max-Age=${maxAge}; HttpOnly; SameSite=Lax${secure}`;
 }

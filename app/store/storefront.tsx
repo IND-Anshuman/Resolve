@@ -3,6 +3,7 @@
 import { PayPalButtons, PayPalScriptProvider } from '@paypal/react-paypal-js';
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
+import { withBase } from '@/lib/base-path';
 import { saveLastOrder } from '@/lib/last-order';
 import { formatUsd } from '@/lib/money';
 import { CATALOG, STORE_NAME } from '@/lib/store/catalog';
@@ -87,7 +88,7 @@ export function Storefront({ clientId }: { clientId: string }) {
                 forceReRender={[cart]}
                 createOrder={async () => {
                   setError(null);
-                  const res = await fetch('/api/store/orders', {
+                  const res = await fetch(withBase('/api/store/orders'), {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ items: lines.map((l) => ({ sku: l.product.sku, quantity: l.quantity })) }),
@@ -97,7 +98,7 @@ export function Storefront({ clientId }: { clientId: string }) {
                   return data.id as string;
                 }}
                 onApprove={async (data) => {
-                  const res = await fetch('/api/store/capture', {
+                  const res = await fetch(withBase('/api/store/capture'), {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ orderId: data.orderID }),
