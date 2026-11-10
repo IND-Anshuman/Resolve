@@ -1,0 +1,17 @@
+name: recheck
+
+# Vercel Hobby only allows daily crons, so this pings the maintenance endpoint
+# every 15 minutes. Needs repo secrets APP_URL (https://<app>.vercel.app) and CRON_SECRET.
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - run: >-
+          curl --fail --silent --show-error --retry 3
+          --header "Authorization: Bearer ${{ secrets.CRON_SECRET }}"
+          "${{ secrets.APP_URL }}/api/cron/recheck"

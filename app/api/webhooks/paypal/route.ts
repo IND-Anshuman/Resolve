@@ -7,6 +7,8 @@ import { processEvent, type PayPalEvent } from '@/lib/cases/webhook-events';
 import { db, schema } from '@/lib/db';
 import { verifyWebhook } from '@/lib/paypal/webhooks';
 
+export const maxDuration = 60;
+
 type WebhookEvent = { id: string; event_type: string };
 
 export async function POST(request: Request) {

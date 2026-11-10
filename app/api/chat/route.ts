@@ -2,6 +2,9 @@ import { z } from 'zod';
 import { errorResponse, json, parseBody, rateLimited } from '@/lib/api';
 import { handleBuyerMessage, respondToOffer, syncChat } from '@/lib/cases/service';
 
+// LLM calls can outlast Vercel's default function timeout.
+export const maxDuration = 60;
+
 const body = z.discriminatedUnion('action', [
   z.object({
     action: z.literal('message'),
