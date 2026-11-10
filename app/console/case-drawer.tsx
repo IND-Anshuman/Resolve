@@ -2,10 +2,11 @@
 
 import type { ColDef } from 'ag-grid-community';
 import { AgGridReact } from 'ag-grid-react';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { withBase } from '@/lib/base-path';
 import type { CaseDetail, CaseListRow } from '@/lib/cases/queries';
 import { formatUsd } from '@/lib/money';
+import { gridTheme } from './ag';
 import { api } from './console';
 import { COMPLAINT_LABELS, GUARDRAIL_LABELS, label, OUTCOME_LABELS } from './labels';
 
@@ -53,20 +54,27 @@ export function CaseDrawer({ caseId, row, onClose }: { caseId: string; row?: Cas
     };
   }, [caseId]);
 
+  // Play the exit animation before unmounting.
+  const [closing, setClosing] = useState(false);
+  const close = useCallback(() => {
+    setClosing(true);
+    setTimeout(onClose, 240);
+  }, [onClose]);
+
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && close();
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [onClose]);
+  }, [close]);
 
   const latest = detail?.decisions[0];
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end bg-ink/30" onClick={onClose}>
+    <div className="drawer-backdrop fixed inset-0 z-50 flex justify-end bg-ink/25 backdrop-blur-[3px]" data-closing={closing} onClick={close}>
       <aside
         role="dialog"
         aria-label="Case details"
-        className="h-full w-full max-w-3xl overflow-y-auto bg-paper p-5 shadow-xl"
+        className="drawer-panel h-full w-full max-w-3xl overflow-y-auto border-l border-line bg-paper p-6 shadow-[-24px_0_60px_-20px_rgb(20_19_43/0.35)]"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start justify-between gap-4">
@@ -77,7 +85,7 @@ export function CaseDrawer({ caseId, row, onClose }: { caseId: string; row?: Cas
             </p>
             {row && <p className="mt-1 font-mono text-xs text-muted">{row.paypalOrderId}</p>}
           </div>
-          <button className="btn btn-quiet" onClick={onClose}>
+          <button className="btn btn-quiet" onClick={close}>
             Close
           </button>
         </div>
@@ -90,7 +98,12 @@ export function CaseDrawer({ caseId, row, onClose }: { caseId: string; row?: Cas
         )}
 
         {error && <p className="mt-4 rounded-md bg-bad-soft p-3 text-sm text-bad">{error}</p>}
-        {!detail && !error && <p className="mt-4 text-sm text-muted">Loading…</p>}
+        {!detail && !error && (
+          <div className="mt-6 space-y-3">
+            <div className="skeleton h-28" />
+            <div className="skeleton h-40" />
+          </div>
+        )}
 
         {detail && (
           <>
@@ -99,6 +112,7 @@ export function CaseDrawer({ caseId, row, onClose }: { caseId: string; row?: Cas
                 <>
                   <div className="card overflow-hidden">
                     <AgGridReact<OptionRow>
+                      theme={gridTheme}
                       rowData={latest.options.map((o) => ({ ...o, chosen: o.kind === latest.chosen }))}
                       columnDefs={OPTION_COLUMNS}
                       domLayout="autoHeight"
@@ -180,7 +194,7 @@ export function CaseDrawer({ caseId, row, onClose }: { caseId: string; row?: Cas
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section className="mt-6">
+    <section className="rise mt-6">
       <h3 className="mb-2 text-sm font-medium">{title}</h3>
       {children}
     </section>

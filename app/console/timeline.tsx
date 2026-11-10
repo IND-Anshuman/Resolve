@@ -12,7 +12,7 @@ export function TimelinePanel() {
     void api<{ items: TimelineItem[] }>('/api/console/timeline').then((data) => setItems(data.items)).catch(() => setItems([]));
   }, []);
 
-  if (!items) return <p className="text-sm text-muted">Loading timeline…</p>;
+  if (!items) return <div className="skeleton h-40" aria-label="Loading timeline" />;
   return (
     <section className="space-y-4">
       <p className="text-sm text-muted">Approval deadlines, parcel re-checks and PayPal dispute response windows.</p>
@@ -25,7 +25,7 @@ export function TimelinePanel() {
           </div>
           <ul>
             {items.map((item) => (
-              <li key={item.id} className="grid grid-cols-[minmax(180px,1fr)_140px_180px_120px] items-center gap-3 border-b border-line px-4 py-3 text-sm last:border-0">
+              <li key={item.id} className="grid transition-colors hover:bg-clay-soft/40 grid-cols-[minmax(180px,1fr)_140px_180px_120px] items-center gap-3 border-b border-line px-4 py-3 text-sm last:border-0">
                 <div><p className="font-medium">{item.title}</p><p className="text-xs text-muted">{KIND_LABELS[item.kind]}</p></div>
                 <span className="truncate text-muted">{item.order}</span>
                 <time dateTime={item.dueAt} className={item.overdue ? 'font-medium text-bad' : 'text-muted'}>{new Date(item.dueAt).toLocaleString()}</time>

@@ -5,6 +5,7 @@ import { AgGridReact } from 'ag-grid-react';
 import { useEffect, useState } from 'react';
 import { COMPLAINT_TYPES, EVIDENCE_STRENGTHS, type ComplaintType, type DisputeOdds, type EvidenceStrength, type StoreSettings } from '@/lib/settings';
 import { api } from './console';
+import { gridTheme } from './ag';
 import { COMPLAINT_LABELS } from './labels';
 
 type OddsRow = { complaint: ComplaintType; evidence: EvidenceStrength } & DisputeOdds;
@@ -120,7 +121,7 @@ export function SettingsPanel() {
           These odds drive the cost model. They are guesses until you replace them with what you see in your own disputes. Click a number to change it.
         </p>
         <div className="card overflow-hidden">
-          <AgGridReact<OddsRow> rowData={rows} columnDefs={ODDS_COLUMNS} domLayout="autoHeight" autoSizeStrategy={{ type: 'fitGridWidth' }} singleClickEdit stopEditingWhenCellsLoseFocus suppressMovableColumns />
+          <AgGridReact<OddsRow> theme={gridTheme} rowData={rows} columnDefs={ODDS_COLUMNS} domLayout="autoHeight" autoSizeStrategy={{ type: 'fitGridWidth' }} singleClickEdit stopEditingWhenCellsLoseFocus suppressMovableColumns />
         </div>
       </section>
 

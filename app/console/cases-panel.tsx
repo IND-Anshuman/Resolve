@@ -5,6 +5,7 @@ import { AgGridReact } from 'ag-grid-react';
 import { useMemo, useState } from 'react';
 import type { CaseListRow } from '@/lib/cases/queries';
 import { formatUsd } from '@/lib/money';
+import { gridTheme } from './ag';
 import { COMPLAINT_LABELS, GUARDRAIL_LABELS, label, OUTCOME_LABELS, STATUS_LABELS, STATUS_STYLES, statusKey, type StatusKey } from './labels';
 
 const money = (p: { value?: number | null }) => (p.value == null ? '' : formatUsd(p.value));
@@ -42,6 +43,16 @@ const FILTERS: { id: 'all' | StatusKey; label: string }[] = [
   { id: 'blocked', label: 'Blocked' },
 ];
 
+function LoadingRows() {
+  return (
+    <div className="card space-y-3 p-5" aria-label="Loading cases">
+      {[0, 1, 2, 3, 4].map((i) => (
+        <div key={i} className="skeleton h-8" style={{ opacity: 1 - i * 0.15 }} />
+      ))}
+    </div>
+  );
+}
+
 export function CasesPanel({ cases, onOpen }: { cases: CaseListRow[] | null; onOpen: (id: string) => void }) {
   const [filter, setFilter] = useState<'all' | StatusKey>('all');
 
@@ -53,24 +64,31 @@ export function CasesPanel({ cases, onOpen }: { cases: CaseListRow[] | null; onO
 
   const rows = useMemo(() => (filter === 'all' ? cases : cases?.filter((c) => statusKey(c) === filter)) ?? [], [cases, filter]);
 
-  if (!cases) return <p className="text-sm text-muted">Loading cases…</p>;
+  if (!cases) return <LoadingRows />;
 
   return (
     <div>
-      <div className="mb-3 flex flex-wrap gap-x-4 gap-y-1 text-sm">
+      <div className="mb-4 flex flex-wrap gap-2 text-sm">
         {FILTERS.filter((f) => f.id === 'all' || counts[f.id]).map((f) => (
-          <button key={f.id} onClick={() => setFilter(f.id)} className={filter === f.id ? 'text-ink underline underline-offset-4' : 'text-muted hover:text-ink'}>
-            {f.label} <span className="text-muted">{counts[f.id] ?? 0}</span>
+          <button
+            key={f.id}
+            onClick={() => setFilter(f.id)}
+            className={`rounded-full border px-3 py-1 transition-all duration-300 ${
+              filter === f.id ? 'border-ink bg-ink text-white shadow-[0_4px_12px_-4px_rgb(20_19_43/0.5)]' : 'border-line bg-white text-muted hover:border-clay/40 hover:text-ink'
+            }`}
+          >
+            {f.label} <span className={`ml-1 tabular-nums ${filter === f.id ? 'text-white/70' : 'text-muted'}`}>{counts[f.id] ?? 0}</span>
           </button>
         ))}
       </div>
       {cases.length === 0 ? (
-        <div className="card p-8 text-center text-sm text-muted">
+        <div className="card p-10 text-center text-sm text-muted">
           No cases yet. Place an order in the store, then complain about it in the buyer chat.
         </div>
       ) : (
         <div className="card overflow-hidden" style={{ height: 460 }}>
           <AgGridReact<CaseListRow>
+            theme={gridTheme}
             rowData={rows}
             columnDefs={COLUMNS}
             getRowId={(p) => p.data.id}

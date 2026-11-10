@@ -1,4 +1,3 @@
-import { SiteHeader } from '../components/site-header';
 import { HelpChat } from './help-chat';
 
 export const dynamic = 'force-dynamic';
@@ -11,7 +10,6 @@ export default function HelpPage() {
       : null;
   return (
     <>
-      <SiteHeader />
       <HelpChat demo={demo} />
     </>
   );

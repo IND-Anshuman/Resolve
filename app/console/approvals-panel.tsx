@@ -18,18 +18,18 @@ export function ApprovalsPanel({
   if (!cases) return <p className="text-sm text-muted">Loading…</p>;
   const queue = cases.filter((c) => c.status === 'waiting_on_approval');
   if (queue.length === 0) {
-    return <div className="card p-8 text-center text-sm text-muted">Nothing is waiting for you. Cases over your limits show up here.</div>;
+    return <div className="card p-10 text-center text-sm text-muted">Nothing is waiting for you. Cases over your limits show up here.</div>;
   }
   return (
     <ul className="space-y-4">
-      {queue.map((c) => (
-        <ApprovalCard key={c.id} row={c} onOpen={onOpen} onChanged={onChanged} />
+      {queue.map((c, i) => (
+        <ApprovalCard i={i} key={c.id} row={c} onOpen={onOpen} onChanged={onChanged} />
       ))}
     </ul>
   );
 }
 
-function ApprovalCard({ row, onOpen, onChanged }: { row: CaseListRow; onOpen: (id: string) => void; onChanged: () => Promise<void> }) {
+function ApprovalCard({ row, onOpen, onChanged, i }: { i: number; row: CaseListRow; onOpen: (id: string) => void; onChanged: () => Promise<void> }) {
   const [amount, setAmount] = useState('');
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<{ ok: boolean; text: string } | null>(null);
@@ -60,7 +60,7 @@ function ApprovalCard({ row, onOpen, onChanged }: { row: CaseListRow; onOpen: (i
   const approveLabel = override ? `Approve ${formatUsd(override)}` : pays ? `Approve ${formatUsd(row.proposedRefundCents)}` : 'Approve';
 
   return (
-    <li className="card p-5">
+    <li className="card card-hover rise p-5" style={{ '--i': i } as React.CSSProperties}>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="font-medium">{row.items}</p>
@@ -73,7 +73,7 @@ function ApprovalCard({ row, onOpen, onChanged }: { row: CaseListRow; onOpen: (i
 
       <p className="mt-3 whitespace-pre-line text-sm">{row.summary}</p>
 
-      <div className="mt-3 rounded-lg bg-paper p-3 text-sm">
+      <div className="mt-3 rounded-xl border border-clay/15 bg-clay-soft/60 p-3 text-sm">
         <p>
           <span className="text-muted">Proposed: </span>
           <span className="font-medium">{label(OUTCOME_LABELS, row.outcome) || 'No proposal'}</span>
@@ -105,7 +105,7 @@ function ApprovalCard({ row, onOpen, onChanged }: { row: CaseListRow; onOpen: (i
           Details
         </button>
       </div>
-      {result && <p className={`mt-3 rounded-md p-3 text-sm ${result.ok ? 'bg-good-soft text-good' : 'bg-bad-soft text-bad'}`}>{result.text}</p>}
+      {result && <p className={`pop mt-3 rounded-xl p-3 text-sm ${result.ok ? 'bg-good-soft text-good' : 'bg-bad-soft text-bad'}`}>{result.text}</p>}
     </li>
   );
 }

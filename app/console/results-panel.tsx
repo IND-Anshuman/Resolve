@@ -5,8 +5,10 @@ import { AgCharts } from 'ag-charts-react';
 import type { Results } from '@/lib/cases/queries';
 import { formatUsd } from '@/lib/money';
 
-const CLAY = '#404040';
-const GOOD = '#1f7a45';
+import { CHART } from './ag';
+
+const CLAY = CHART.accent;
+const GOOD = CHART.good;
 const dollars = (p: { value: number }) => `$${p.value}`;
 
 const base = { background: { fill: 'transparent' }, padding: { top: 10, right: 16, bottom: 4, left: 4 } };
@@ -19,8 +21,8 @@ export function ResultsPanel({ results }: { results: Results | null }) {
     ...base,
     data: results.daily,
     series: [
-      { type: 'bar', xKey: 'day', yKey: 'refundDollars', yName: 'Refund spend', fill: CLAY },
-      { type: 'line', xKey: 'day', yKey: 'capDollars', yName: 'Daily cap', stroke: '#a8670f', marker: { enabled: false } },
+      { type: 'bar', xKey: 'day', yKey: 'refundDollars', yName: 'Refund spend', fill: CLAY, cornerRadius: 6 },
+      { type: 'line', xKey: 'day', yKey: 'capDollars', yName: 'Daily cap', stroke: CHART.warn, marker: { enabled: false } },
       { type: 'line', xKey: 'day', yKey: 'feesAvoidedDollars', yName: 'Dispute fees avoided', stroke: GOOD },
     ],
     axes: {
@@ -33,7 +35,7 @@ export function ResultsPanel({ results }: { results: Results | null }) {
   const weeklyCases: AgCartesianChartOptions = {
     ...base,
     data: weekly,
-    series: [{ type: 'bar', xKey: 'week', yKey: 'resolved', yName: 'Cases resolved', fill: CLAY }],
+    series: [{ type: 'bar', xKey: 'week', yKey: 'resolved', yName: 'Cases resolved', fill: CLAY, cornerRadius: 6 }],
     axes: {
       x: { type: 'category', position: 'bottom', title: { text: 'Week starting' } },
       y: { type: 'number', position: 'left', title: { text: 'Cases' }, interval: { minSpacing: 40 } },
@@ -44,7 +46,7 @@ export function ResultsPanel({ results }: { results: Results | null }) {
   const weeklySaved: AgCartesianChartOptions = {
     ...base,
     data: weekly,
-    series: [{ type: 'bar', xKey: 'week', yKey: 'savedDollars', yName: 'Expected saved', fill: GOOD }],
+    series: [{ type: 'bar', xKey: 'week', yKey: 'savedDollars', yName: 'Expected saved', fill: GOOD, cornerRadius: 6 }],
     axes: {
       x: { type: 'category', position: 'bottom', title: { text: 'Week starting' } },
       y: { type: 'number', position: 'left', title: { text: 'Dollars' }, label: { formatter: dollars } },
@@ -55,7 +57,7 @@ export function ResultsPanel({ results }: { results: Results | null }) {
   const refundSplit: AgCartesianChartOptions = {
     ...base,
     data: refunds,
-    series: [{ type: 'bar', xKey: 'kind', yKey: 'dollars', yName: 'Refunded', fill: CLAY }],
+    series: [{ type: 'bar', xKey: 'kind', yKey: 'dollars', yName: 'Refunded', fill: CLAY, cornerRadius: 6 }],
     axes: {
       x: { type: 'category', position: 'bottom' },
       y: { type: 'number', position: 'left', title: { text: 'Dollars refunded' }, label: { formatter: dollars } },
@@ -105,9 +107,10 @@ export function ResultsPanel({ results }: { results: Results | null }) {
 
 function Tile({ title, value, note }: { title: string; value: string; note: string }) {
   return (
-    <div className="card p-5">
+    <div className="card card-hover relative overflow-hidden p-5">
+      <span aria-hidden className="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-gradient-to-br from-[#8b7bff]/25 to-[#22d3ee]/10 blur-xl" />
       <p className="text-sm text-muted">{title}</p>
-      <p className="mt-1 text-2xl font-semibold">{value}</p>
+      <p className="pop mt-1 text-3xl font-semibold tracking-tight">{value}</p>
       <p className="mt-1 text-xs text-muted">{note}</p>
     </div>
   );
@@ -115,7 +118,7 @@ function Tile({ title, value, note }: { title: string; value: string; note: stri
 
 function ChartCard({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="card p-4">
+    <div className="card card-hover p-4">
       <h3 className="mb-2 text-sm font-medium">{title}</h3>
       {children}
     </div>

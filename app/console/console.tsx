@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { withBase } from '@/lib/base-path';
 import type { CaseListRow, Results } from '@/lib/cases/queries';
+import { LogoMark } from '../components/logo';
+import { useSlidingIndicator } from '../components/motion';
 import { ApprovalsPanel } from './approvals-panel';
 import { CaseDrawer } from './case-drawer';
 import { CasesPanel } from './cases-panel';
@@ -35,6 +37,7 @@ export function Console({ initialCase = null }: { initialCase?: string | null })
   const [openCase, setOpenCase] = useState<string | null>(initialCase);
   const [requiresLogin, setRequiresLogin] = useState(false);
   const refreshing = useRef(false);
+  const { container: tabsRef, style: sliderStyle } = useSlidingIndicator<HTMLDivElement>(tab);
 
   const refresh = useCallback(async () => {
     if (refreshing.current) return;
@@ -85,31 +88,47 @@ export function Console({ initialCase = null }: { initialCase?: string | null })
   ];
 
   return (
-    <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6">
-      <div role="tablist" className="flex gap-1 border-b border-line">
+    <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8">
+      <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">Seller console</h1>
+          <p className="mt-1 text-sm text-muted">Every case Resolve handled, what it decided, and what is waiting on you.</p>
+        </div>
+        <span className="eyebrow">
+          {offline ? <span className="h-2 w-2 rounded-full bg-bad" /> : <span className="live-dot" />}
+          {offline ? 'Reconnecting' : 'Live · updates every 4s'}
+        </span>
+      </div>
+      <div ref={tabsRef} role="tablist" className="relative inline-flex max-w-full gap-1 overflow-x-auto rounded-full border border-line bg-white/70 p-1 shadow-[var(--shadow-sm)] backdrop-blur">
+        <span className="slider bg-ink shadow-[0_4px_12px_-4px_rgb(20_19_43/0.5)]" style={{ ...sliderStyle, top: 4, bottom: 4 }} aria-hidden />
         {tabs.map((t) => (
           <button
             key={t.id}
             role="tab"
+            data-active={tab === t.id}
             aria-selected={tab === t.id}
             onClick={() => setTab(t.id)}
-            className={`-mb-px flex items-center gap-1.5 border-b px-3 py-2 text-sm ${
-              tab === t.id ? 'border-ink text-ink' : 'border-transparent text-muted hover:text-ink'
+            className={`relative z-10 flex items-center gap-1.5 whitespace-nowrap rounded-full px-4 py-1.5 text-sm transition-colors duration-300 ${
+              tab === t.id ? 'text-white' : 'text-muted hover:text-ink'
             }`}
           >
             {t.label}
-            {t.badge ? <span className="text-xs text-warn">{t.badge}</span> : null}
+            {t.badge ? (
+              <span key={t.badge} className="bump rounded-full bg-warn px-1.5 text-[11px] font-semibold leading-[18px] text-white">
+                {t.badge}
+              </span>
+            ) : null}
           </button>
         ))}
       </div>
 
       {problem && !cases && (
-        <p className="mt-5 rounded-md bg-bad-soft p-3 text-sm text-bad">
+        <p className="pop mt-5 rounded-xl bg-bad-soft p-3 text-sm text-bad">
           {problem} If this is a fresh checkout, finish the steps in docs/setup.md (database, then <span className="font-mono">npm run db:migrate</span>).
         </p>
       )}
 
-      <div className="mt-5">
+      <div key={tab} className="page-enter mt-6">
         {tab === 'cases' && <CasesPanel cases={cases} onOpen={setOpenCase} />}
         {tab === 'approvals' && <ApprovalsPanel cases={cases} onOpen={setOpenCase} onChanged={refresh} />}
         {tab === 'results' && <ResultsPanel results={results} />}
@@ -130,7 +149,10 @@ function ConsoleLogin({ onLogin }: { onLogin: (token: string) => Promise<void> }
   const [busy, setBusy] = useState(false);
   return (
     <main className="mx-auto flex w-full max-w-md flex-1 items-center px-4 py-12">
-      <form className="card w-full p-6" onSubmit={(event) => { event.preventDefault(); setBusy(true); setError(null); void onLogin(token).catch((e) => setError(e instanceof Error ? e.message : 'Login failed')).finally(() => setBusy(false)); }}>
+      <form className="card pop w-full p-7" onSubmit={(event) => { event.preventDefault(); setBusy(true); setError(null); void onLogin(token).catch((e) => setError(e instanceof Error ? e.message : 'Login failed')).finally(() => setBusy(false)); }}>
+        <span className="logo-3d mb-4 inline-flex">
+          <LogoMark size={44} />
+        </span>
         <h1 className="text-xl font-semibold">Seller sign in</h1>
         <p className="mt-2 text-sm text-muted">Enter the console access token configured on the server.</p>
         <input className="field mt-4" type="password" value={token} onChange={(event) => setToken(event.target.value)} autoFocus required aria-label="Console access token" />
@@ -143,7 +165,7 @@ function ConsoleLogin({ onLogin }: { onLogin: (token: string) => Promise<void> }
 
 function ActivityStrip({ events, offline }: { events: WebhookEvent[]; offline: boolean }) {
   return (
-    <section aria-label="PayPal webhooks" className="mt-10 border-t border-line pt-4 text-xs">
+    <section aria-label="PayPal webhooks" className="card mt-10 p-4 text-xs">
       <div className="flex items-center justify-between">
         <span className="text-muted">PayPal webhooks</span>
         <span className={offline ? 'text-bad' : 'text-muted'}>{offline ? 'Reconnecting…' : 'Live'}</span>
@@ -153,7 +175,7 @@ function ActivityStrip({ events, offline }: { events: WebhookEvent[]; offline: b
       ) : (
         <ul className="mt-2 space-y-1">
           {events.map((e) => (
-            <li key={e.id} className="flex items-center gap-3">
+            <li key={e.id} className="fade flex items-center gap-3">
               <span className={e.verified ? 'text-good' : 'text-bad'} title={e.verified ? 'Signature verified' : 'Signature NOT verified'}>
                 {e.verified ? '✓' : '✗'}
               </span>
