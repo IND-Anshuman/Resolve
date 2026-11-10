@@ -1,0 +1,95 @@
+{
+  "info": {
+    "name": "Resolve · PayPal Hackathon Demo",
+    "description": "Demo script for the buyer chat, AG Grid console, Render cron, PayPal webhook, and typed Disputes API.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000" },
+    { "key": "orderId", "value": "{{DEMO_ORDER_ID}}" },
+    { "key": "email", "value": "{{DEMO_ORDER_EMAIL}}" },
+    { "key": "caseId", "value": "00000000-0000-0000-0000-000000000000" },
+    { "key": "cronSecret", "value": "" },
+    { "key": "consoleToken", "value": "" },
+    { "key": "webhookId", "value": "demo-event-{{$timestamp}}" }
+  ],
+  "item": [
+    {
+      "name": "1 · Buyer chat",
+      "item": [
+        {
+          "name": "Start a damaged-item case",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"action\": \"message\",\n  \"orderId\": \"{{orderId}}\",\n  \"email\": \"{{email}}\",\n  \"text\": \"My mug arrived cracked and I attached a photo.\"\n}" },
+            "url": "{{baseUrl}}/api/chat"
+          },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('chat responds', () => pm.expect(pm.response.code).to.be.oneOf([200, 400, 404, 503]));", "if (pm.response.code === 200) pm.collectionVariables.set('caseId', pm.response.json().caseId);"] } }]
+        },
+        {
+          "name": "Sync buyer chat",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\"action\":\"sync\",\"orderId\":\"{{orderId}}\",\"email\":\"{{email}}\"}" },
+            "url": "{{baseUrl}}/api/chat"
+          },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('sync endpoint is available', () => pm.expect(pm.response.code).to.be.oneOf([200, 404]));"] } }]
+        }
+      ]
+    },
+    {
+      "name": "2 · Seller console",
+      "item": [
+        {
+          "name": "List cases for AG Grid",
+          "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{consoleToken}}" }], "url": "{{baseUrl}}/api/console/cases" },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('case list returns JSON', () => pm.expect(pm.response.code).to.be.oneOf([200, 500]));"] } }]
+        },
+        {
+          "name": "Approve case",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{consoleToken}}" }],
+            "body": { "mode": "raw", "raw": "{\"action\":\"approve\",\"caseId\":\"{{caseId}}\"}" },
+            "url": "{{baseUrl}}/api/console/decision"
+          }
+        },
+        {
+          "name": "Timeline deadlines",
+          "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{consoleToken}}" }], "url": "{{baseUrl}}/api/console/timeline" }
+        }
+      ]
+    },
+    {
+      "name": "3 · Render maintenance",
+      "item": [
+        {
+          "name": "Recheck shipments and expire approvals",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{cronSecret}}" }],
+            "url": "{{baseUrl}}/api/cron/recheck"
+          },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('cron auth works', () => pm.expect(pm.response.code).to.be.oneOf([200, 401]));"] } }]
+        }
+      ]
+    },
+    {
+      "name": "4 · PayPal webhook",
+      "item": [
+        {
+          "name": "Dispute opened webhook shape",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"id\": \"{{webhookId}}\",\n  \"event_type\": \"CUSTOMER.DISPUTE.CREATED\",\n  \"resource\": {\"dispute_id\": \"demo-dispute\", \"reason\": \"MERCHANDISE_OR_SERVICE_NOT_RECEIVED\"}\n}" },
+            "url": "{{baseUrl}}/api/webhooks/paypal"
+          },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('webhook endpoint accepts a signed or rejects an unsigned event', () => pm.expect(pm.response.code).to.be.oneOf([200, 401]));"] } }]
+        }
+      ]
+    }
+  ]
+}

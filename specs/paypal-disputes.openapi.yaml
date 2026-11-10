@@ -1,0 +1,79 @@
+openapi: 3.0.3
+info:
+  title: PayPal Disputes API subset used by Resolve
+  version: 1.0.0
+  description: The operations used by the typed APIMatic-compatible client in lib/paypal/disputes.ts.
+servers:
+  - url: https://api-m.sandbox.paypal.com
+  - url: https://api-m.paypal.com
+paths:
+  /v1/customer/disputes/{dispute_id}:
+    get:
+      operationId: getDispute
+      parameters:
+        - $ref: '#/components/parameters/DisputeId'
+      responses:
+        '200':
+          description: Dispute
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Dispute' }
+  /v1/customer/disputes/{dispute_id}/provide-evidence:
+    post:
+      operationId: provideEvidence
+      parameters:
+        - $ref: '#/components/parameters/DisputeId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [evidence]
+              properties:
+                evidence:
+                  type: array
+                  items: { $ref: '#/components/schemas/Evidence' }
+      responses:
+        '200': { description: Evidence accepted }
+  /v1/customer/disputes/{dispute_id}/accept-claim:
+    post:
+      operationId: acceptClaim
+      parameters:
+        - $ref: '#/components/parameters/DisputeId'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties: { note: { type: string } }
+      responses:
+        '200': { description: Claim accepted }
+components:
+  parameters:
+    DisputeId:
+      name: dispute_id
+      in: path
+      required: true
+      schema: { type: string }
+  schemas:
+    Dispute:
+      type: object
+      required: [dispute_id]
+      properties:
+        dispute_id: { type: string }
+        status: { type: string }
+        reason: { type: string }
+        dispute_amount:
+          type: object
+          properties:
+            currency_code: { type: string }
+            value: { type: string }
+    Evidence:
+      type: object
+      required: [evidence_type]
+      properties:
+        evidence_type: { type: string }
+        evidence_info: { type: object, additionalProperties: true }
+        notes: { type: string }
